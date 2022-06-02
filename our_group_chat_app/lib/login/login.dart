@@ -1,4 +1,4 @@
-import 'package:web_socket_channel/web_socket_channel.dart';
+//import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/material.dart';
 
 import 'login_data.dart';
@@ -13,17 +13,17 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController urlController = TextEditingController();
   TextEditingController usernameController = TextEditingController();
 
-  late WebSocketChannel channel;
+  //late WebSocketChannel channel;
   late String username;
   late String url;
 
   void _connectSocket() {
-    channel = WebSocketChannel.connect(Uri.parse('ws://' +
+    /*channel = WebSocketChannel.connect(Uri.parse('ws://' +
             urlController.text +
             '/socket/websocketserver/' +
             usernameController
                 .text) //192.168.1.250:8080 //122.175.208.221:8080 //localhost:8080/socket/sayhello //
-        );
+        );*/
     username = usernameController.text;
     url = urlController.text;
     usernameController.clear();
@@ -32,12 +32,14 @@ class _LoginPageState extends State<LoginPage> {
         arguments: LoginData(username: username, messages: [], url: url));
   }
 
+  /*
   void logout() {
     setState(() {
       username = "";
     });
     channel.sink.close();
   }
+  */
 
   Center buildUserInputForm() {
     return Center(
@@ -87,6 +89,9 @@ class _LoginPageState extends State<LoginPage> {
           TextField(
             controller: usernameController,
             decoration: const InputDecoration(hintText: "Insert Username"),
+            onSubmitted: (data) {
+              _connectSocket();
+            },
           ),
           MaterialButton(
             onPressed: _connectSocket,

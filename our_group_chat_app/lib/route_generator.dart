@@ -1,6 +1,6 @@
-import 'package:apnavaio/apps/apps.dart';
-import 'package:apnavaio/login/login.dart';
-import 'package:apnavaio/login/login_data.dart';
+import 'package:our_group_chat_app/apps/apps.dart';
+import 'package:our_group_chat_app/login/login.dart';
+import 'package:our_group_chat_app/login/login_data.dart';
 import 'package:flutter/material.dart';
 //import 'chatapp/chat_app.dart';
 import 'apps/chat/group_chat.dart';
@@ -28,8 +28,7 @@ class RouteGenerator {
       case '/chatappold':
         return MaterialPageRoute(
           //builder: (context) => const ChatDetailPage(title: 'Home Chat Group'),
-          builder: (context) =>
-              const GroupChatOld(title: 'Apni VAIO Group Chat'),
+          builder: (context) => const GroupChatOld(title: 'Our Group Chat App'),
         );
       default:
         // If there is no such named route in the switch statement, e.g. /third

@@ -1,13 +1,13 @@
-import 'package:apnavaio/route_generator.dart';
+import 'package:our_group_chat_app/route_generator.dart';
 import 'package:flutter/material.dart';
 
-class ApnaVaio extends StatelessWidget {
-  const ApnaVaio({Key? key}) : super(key: key);
+class OurGroupChatApp extends StatelessWidget {
+  const OurGroupChatApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Apna VAIO',
+      title: 'Our Group Chat App',
       theme: ThemeData(
         primarySwatch: Colors.grey,
       ),

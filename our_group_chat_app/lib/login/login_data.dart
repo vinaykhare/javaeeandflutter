@@ -1,4 +1,4 @@
-import 'package:apnavaio/apps/chat/chat_message.dart';
+import 'package:our_group_chat_app/apps/chat/chat_message.dart';
 
 class LoginData {
   late String username;

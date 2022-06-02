@@ -1,4 +1,4 @@
-import 'package:apnavaio/login/login_data.dart';
+import 'package:our_group_chat_app/login/login_data.dart';
 import 'package:flutter/material.dart';
 
 class Apps extends StatelessWidget {
@@ -9,7 +9,7 @@ class Apps extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Apne VAIO Ki Apps"),
+          title: const Text("Our Group Chat Apps"),
         ),
         body: Stack(
           children: [

@@ -1,6 +1,6 @@
-import 'package:apnavaio/apna_vaio.dart';
+import 'package:our_group_chat_app/our_group_chat_app.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const ApnaVaio());
+  runApp(const OurGroupChatApp());
 }
