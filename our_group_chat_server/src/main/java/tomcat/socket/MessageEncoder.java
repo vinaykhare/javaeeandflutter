@@ -9,7 +9,6 @@ public class MessageEncoder implements Encoder.Text<ChatMessage> {
 
 	@Override
 	public String encode(ChatMessage object) throws EncodeException {
-		
 		return new Gson().toJson(object);
 	}
 

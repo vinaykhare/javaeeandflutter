@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:our_group_chat_app/our_group_chat_app.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:our_group_chat_app/login/login_data.dart';
 
@@ -18,17 +19,18 @@ class GroupChat extends StatefulWidget {
 }
 
 class _GroupChatState extends State<GroupChat> {
+  bool isLogOut = false;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollcontroller = ScrollController();
 
   //Save these three to retain the session
   //WebSocketChannel? _channel = GetStorage().read("channel");
   //String? _username = GetStorage().read("username");
-  WebSocketChannel? _channel;
+  late WebSocketChannel _channel;
   String? _username;
   List<ChatMessage> messages = [];
 
-  List<File>? pickedImages;
+  List<File> pickedImages = [];
   List<Uint8List> pickedWebImages = [];
   String defaultImage = "images/logo.jpg";
   final picker = ImagePicker();
@@ -43,11 +45,10 @@ class _GroupChatState extends State<GroupChat> {
             widget.loginData
                 .username) //192.168.1.250:8080 //122.175.208.221:8080 //localhost:8080/socket/sayhello //
         );
-    messages = widget.loginData.messages;
+    //messages = widget.loginData.messages;
     super.initState();
   }
 
-/*
   Future _getImage() async {
     final pickedFiles = await picker.pickMultiImage();
     //final pickedFiles = await FilePicker.platform.pickFiles(allowMultiple: true);
@@ -58,7 +59,7 @@ class _GroupChatState extends State<GroupChat> {
       });
     }
   }
-*/
+
   Future _getImageWithFilePicker() async {
     final pickedFiles =
         await FilePicker.platform.pickFiles(allowMultiple: true);
@@ -77,7 +78,7 @@ class _GroupChatState extends State<GroupChat> {
 
       //_channel.sink.add(_username + ":" + _controller.text);
       //_controller.text = jsonEncode(msg);
-      _channel?.sink.add(jsonEncode(msg));
+      _channel.sink.add(jsonEncode(msg));
     }
     if (_scrollcontroller.hasClients) {
       _scrollcontroller.jumpTo(_scrollcontroller.position.maxScrollExtent);
@@ -87,15 +88,34 @@ class _GroupChatState extends State<GroupChat> {
     _controller.clear();
   }
 
+  void logout() {
+    _channel.sink.close();
+    _controller.dispose();
+    widget.loginData.username = '';
+    widget.loginData.url = '';
+    setState(() {
+      isLogOut = true;
+    });
+  }
+
   @override
   void dispose() {
+    _channel.sink.close();
     _controller.dispose();
+    widget.loginData.username = '';
+    widget.loginData.url = '';
     super.dispose();
   }
 
   AppBar buildHeader() {
     return AppBar(
       title: const Text("Group Chat App!"),
+      actions: [
+        IconButton(
+          onPressed: logout,
+          icon: const Icon(Icons.logout),
+        ),
+      ],
     );
   }
 
@@ -111,8 +131,8 @@ class _GroupChatState extends State<GroupChat> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: (messages[index].from != _username
-                      ? Colors.grey.shade200
-                      : Colors.blue[200]),
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).colorScheme.outline),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Column(children: [
@@ -133,7 +153,7 @@ class _GroupChatState extends State<GroupChat> {
         child: Container(
             margin: const EdgeInsets.symmetric(vertical: 20),
             child: StreamBuilder(
-              stream: _channel?.stream,
+              stream: _channel.stream,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   messages.add(ChatMessage.fromJson(
@@ -142,7 +162,7 @@ class _GroupChatState extends State<GroupChat> {
                 return ListView.builder(
                   controller: _scrollcontroller,
                   itemCount: messages.length,
-                  shrinkWrap: true,
+                  //shrinkWrap: true,
                   padding: const EdgeInsets.only(top: 10, bottom: 50),
                   //physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
@@ -153,40 +173,20 @@ class _GroupChatState extends State<GroupChat> {
             )));
   }
 
-  Widget buildBottomForm() {
+  Widget buildBottomForm(BuildContext context) {
     return Row(
       children: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.attach_file),
-          onPressed: () {
-            showModalBottomSheet(
-                context: context,
-                builder: (context) {
-                  return Container(
-                    color: Colors.red[100],
-                    height: 250,
-                    width: double.infinity,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            ElevatedButton(
-                                onPressed: () {
-                                  _getImageWithFilePicker();
-                                  Navigator.pop(context);
-                                },
-                                child: const Icon(Icons.image)),
-                            const Icon(Icons.video_stable),
-                            const Icon(Icons.file_present),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                });
-          },
+        FittedBox(
+          child: IconButton(
+            icon: const Icon(
+              Icons.image,
+              color: Colors.brown,
+              size: 30,
+            ),
+            onPressed: () {
+              Platform.isAndroid ? _getImage() : _getImageWithFilePicker();
+            },
+          ),
         ),
         const SizedBox(
           width: 15,
@@ -194,17 +194,18 @@ class _GroupChatState extends State<GroupChat> {
         Expanded(
           child: ListView(children: [
             TextField(
-                controller: _controller,
-                autofocus: true,
-                autocorrect: true,
-                onSubmitted: (value) {
-                  _sendMessage();
-                },
-                decoration: const InputDecoration(
-                    hintText: "Write message...",
-                    hintStyle: TextStyle(color: Colors.black54),
-                    border: InputBorder.none)),
-            buildWebImageBar()
+              controller: _controller,
+              autofocus: true,
+              autocorrect: true,
+              onSubmitted: (value) {
+                _sendMessage();
+              },
+              decoration: const InputDecoration(
+                hintText: "Write message...",
+                border: InputBorder.none,
+              ),
+            ),
+            Platform.isAndroid ? buildImageBar() : buildWebImageBar(),
           ]),
         ),
         const SizedBox(
@@ -214,47 +215,44 @@ class _GroupChatState extends State<GroupChat> {
           onPressed: _sendMessage,
           child: const Icon(
             Icons.send,
-            color: Colors.white,
             size: 18,
           ),
-          backgroundColor: Colors.black,
           elevation: 0,
         ),
       ],
     );
   }
 
-  Align buildBottomBar() {
+  Align buildBottomBar(BuildContext context) {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Container(
         padding: const EdgeInsets.only(left: 10, bottom: 10, top: 10),
         height: pickedWebImages.isEmpty ? 60 : 160,
         width: double.infinity,
-        color: Colors.white,
-        child: buildBottomForm(),
+        color: Theme.of(context).bottomAppBarColor,
+        child: buildBottomForm(context),
       ),
     );
   }
 
   Widget buildImageBar() {
-    return SizedBox(
-      height: 100.0,
-      width: 500.0,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: pickedImages!.length,
-        itemBuilder: (context, index) {
-          return Container(
-            height: 100.0,
-            width: 100.0,
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: FileImage(pickedImages![index]), fit: BoxFit.fill),
-                border: Border.all()),
-          );
-        },
-      ),
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: pickedImages.length,
+      itemBuilder: (context, index) {
+        return Container(
+          height: 100.0,
+          width: 100.0,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: FileImage(pickedImages[index]),
+              fit: BoxFit.fill,
+            ),
+            border: Border.all(),
+          ),
+        );
+      },
     );
   }
 
@@ -280,19 +278,20 @@ class _GroupChatState extends State<GroupChat> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> chatBody = [buildMessageList(), buildBottomBar()];
-    return Scaffold(
-        appBar: buildHeader(),
-        body: Container(
-          decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage(defaultImage), fit: BoxFit.fill)),
-          child: Column(
-            children: chatBody,
-          ),
-        )
-
-        //bottomNavigationBar: BottomAppBar(child: buildBottomInputForm()),
-        );
+    List<Widget> chatBody = [buildMessageList(), buildBottomBar(context)];
+    return isLogOut
+        ? const OurGroupChatApp()
+        : Scaffold(
+            appBar: buildHeader(),
+            body: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).backgroundColor,
+              ),
+              child: Column(
+                children: chatBody,
+              ),
+            ),
+            //bottomNavigationBar: BottomAppBar(child: buildBottomInputForm()),
+          );
   }
 }
