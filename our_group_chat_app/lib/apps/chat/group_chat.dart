@@ -21,7 +21,6 @@ class GroupChat extends StatefulWidget {
 class _GroupChatState extends State<GroupChat> {
   bool isLogOut = false;
   final TextEditingController _controller = TextEditingController();
-  final ScrollController _scrollcontroller = ScrollController();
 
   //Save these three to retain the session
   //WebSocketChannel? _channel = GetStorage().read("channel");
@@ -80,11 +79,6 @@ class _GroupChatState extends State<GroupChat> {
       //_controller.text = jsonEncode(msg);
       _channel.sink.add(jsonEncode(msg));
     }
-    if (_scrollcontroller.hasClients) {
-      _scrollcontroller.jumpTo(_scrollcontroller.position.maxScrollExtent);
-    }
-    /* _scrollcontroller.animateTo(_scrollcontroller.position.maxScrollExtent,
-        duration: const Duration(seconds: 2), curve: Curves.fastOutSlowIn);*/
     _controller.clear();
   }
 
@@ -156,11 +150,17 @@ class _GroupChatState extends State<GroupChat> {
               stream: _channel.stream,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  messages.add(ChatMessage.fromJson(
-                      jsonDecode(snapshot.data.toString())));
+                  messages.insert(
+                    0,
+                    ChatMessage.fromJson(
+                      jsonDecode(
+                        snapshot.data.toString(),
+                      ),
+                    ),
+                  );
                 }
                 return ListView.builder(
-                  controller: _scrollcontroller,
+                  reverse: true,
                   itemCount: messages.length,
                   //shrinkWrap: true,
                   padding: const EdgeInsets.only(top: 10, bottom: 50),
@@ -192,21 +192,18 @@ class _GroupChatState extends State<GroupChat> {
           width: 15,
         ),
         Expanded(
-          child: ListView(children: [
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              autocorrect: true,
-              onSubmitted: (value) {
-                _sendMessage();
-              },
-              decoration: const InputDecoration(
-                hintText: "Write message...",
-                border: InputBorder.none,
-              ),
+          child: TextField(
+            controller: _controller,
+            autofocus: true,
+            autocorrect: true,
+            onSubmitted: (value) {
+              _sendMessage();
+            },
+            decoration: const InputDecoration(
+              hintText: "Write message...",
+              border: InputBorder.none,
             ),
-            Platform.isAndroid ? buildImageBar() : buildWebImageBar(),
-          ]),
+          ),
         ),
         const SizedBox(
           width: 15,
@@ -242,7 +239,6 @@ class _GroupChatState extends State<GroupChat> {
       itemCount: pickedImages.length,
       itemBuilder: (context, index) {
         return Container(
-          height: 100.0,
           width: 100.0,
           decoration: BoxDecoration(
             image: DecorationImage(
@@ -278,7 +274,30 @@ class _GroupChatState extends State<GroupChat> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> chatBody = [buildMessageList(), buildBottomBar(context)];
+    List<Widget> chatBody = [
+      buildMessageList(),
+      if (pickedImages.isNotEmpty || pickedWebImages.isNotEmpty)
+        Expanded(
+            child: Stack(
+          children: [
+            Platform.isAndroid ? buildImageBar() : buildWebImageBar(),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    pickedImages.clear();
+                    pickedWebImages.clear();
+                  });
+                },
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          ],
+        )),
+      buildBottomBar(context),
+    ];
     return isLogOut
         ? const OurGroupChatApp()
         : Scaffold(
@@ -288,6 +307,7 @@ class _GroupChatState extends State<GroupChat> {
                 color: Theme.of(context).backgroundColor,
               ),
               child: Column(
+                //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: chatBody,
               ),
             ),
