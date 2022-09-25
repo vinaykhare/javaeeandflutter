@@ -10,10 +10,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
+  shared_preferences: ^2.0.15
   web_socket_channel: ^2.1.0
   image_picker: ^0.8.5+3
-  file_picker: ^4.5.1
+  image_picker_for_web: ^2.1.8
+  firebase_core: ^1.22.0
+  firebase_messaging: ^13.0.2
+  provider: ^6.0.3
 
 dev_dependencies:
   flutter_test:
